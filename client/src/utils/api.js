@@ -1,11 +1,26 @@
 import axios from 'axios';
 
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
+  baseURL: `${baseURL}/api`,
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+const healthApi = axios.create({
+  baseURL,
+  timeout: 3000,
+});
+
+export const checkHealth = async () => {
+  try {
+    const response = await healthApi.get('/health');
+    return response.status === 200;
+  } catch (error) {
+    return false;
+  }
+};
 
 export const startSession = async () => {
   const response = await api.post('/session/start');

@@ -1,17 +1,40 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ChatWindow from '../components/ChatWindow';
 import MessageInput from '../components/MessageInput';
-import { startSession, sendMessage, getMessages } from '../utils/api';
+import { startSession, sendMessage, getMessages, checkHealth } from '../utils/api';
 
 const Support = () => {
   const [ticketId, setTicketId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [isOnline, setIsOnline] = useState(false);
   const intervalRef = useRef(null);
+  const healthCheckRef = useRef(null);
+
+  useEffect(() => {
+    const checkServerHealth = async () => {
+      const online = await checkHealth();
+      setIsOnline(online);
+    };
+
+    checkServerHealth();
+    healthCheckRef.current = setInterval(checkServerHealth, 5000);
+
+    return () => {
+      if (healthCheckRef.current) {
+        clearInterval(healthCheckRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const initializeSession = async () => {
+      if (!isOnline) {
+        setLoading(false);
+        return;
+      }
+
       try {
         const data = await startSession();
         setTicketId(data.ticketId);
@@ -22,11 +45,15 @@ const Support = () => {
       }
     };
 
-    initializeSession();
-  }, []);
+    if (isOnline) {
+      initializeSession();
+    } else {
+      setLoading(false);
+    }
+  }, [isOnline]);
 
   useEffect(() => {
-    if (!ticketId) return;
+    if (!ticketId || !isOnline) return;
 
     const fetchMessages = async () => {
       try {
@@ -45,7 +72,7 @@ const Support = () => {
         clearInterval(intervalRef.current);
       }
     };
-  }, [ticketId]);
+  }, [ticketId, isOnline]);
 
   const handleSend = async (text) => {
     if (!ticketId || sending) return;
@@ -73,22 +100,80 @@ const Support = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-gray-500">Loading...</div>
+      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mb-4"></div>
+          <div className="text-gray-700 font-medium">Connecting to support...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isOnline) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="bg-white rounded-full p-6 shadow-lg mb-4">
+          <svg className="w-16 h-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414" />
+          </svg>
+        </div>
+        <h3 className="text-2xl font-bold text-gray-800 mb-2">Server Offline</h3>
+        <p className="text-gray-600 text-center max-w-md mb-4">
+          Unable to connect to the server. Please make sure the server is running.
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg font-medium"
+        >
+          Retry Connection
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-white">
-      <div className="bg-blue-600 text-white p-4 shadow-md">
-        <h1 className="text-xl font-semibold">Support Chat</h1>
-        {ticketId && (
-          <p className="text-sm text-blue-100 mt-1">Ticket ID: {ticketId}</p>
-        )}
+    <div className="flex flex-col h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold flex items-center gap-2">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                Support Chat
+              </h1>
+              {ticketId && (
+                <p className="text-sm text-blue-100 mt-1 flex items-center gap-1">
+                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                  Ticket: {ticketId}
+                </p>
+              )}
+            </div>
+            <div className={`hidden md:flex items-center gap-2 text-sm transition-colors ${
+              isOnline ? 'text-green-200' : 'text-red-200'
+            }`}>
+              {isOnline ? (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Online</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Offline</span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-      <ChatWindow messages={messages} ticketId={ticketId} />
-      <MessageInput onSend={handleSend} disabled={sending || !ticketId} />
+      <ChatWindow messages={messages} ticketId={ticketId} sending={sending} isOnline={isOnline} />
+      <MessageInput onSend={handleSend} disabled={sending || !ticketId || !isOnline} />
     </div>
   );
 };
