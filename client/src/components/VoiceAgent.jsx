@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
-import { startVoiceAgent, stopVoiceAgent, getVoiceAgentStatus } from '../utils/api';
+import { startVoiceAgent, stopVoiceAgent, getVoiceAgentStatus, generateUserToken } from '../utils/api';
 
 const VoiceAgent = ({ ticketId, appId }) => {
   const [isConnected, setIsConnected] = useState(false);
@@ -93,12 +93,25 @@ const VoiceAgent = ({ ticketId, appId }) => {
         console.log('User left:', user.uid);
       });
 
-      // Step 4: Join the channel
-      // Note: For production, you should generate a proper RTC token
-      // For now, using empty string (works if token authentication is disabled)
-      await client.join(finalAppId, channelName, null, resultUserId || userId);
+      // Step 4: Generate RTC token for user
+      let rtcToken = null;
+      try {
+        const tokenResult = await generateUserToken(channelName, resultUserId || userId, 3600);
+        if (tokenResult.success && tokenResult.token) {
+          rtcToken = tokenResult.token;
+          console.log('✅ RTC token generated successfully');
+        } else {
+          console.warn('⚠️  Token generation returned empty token, using null (works if token auth is disabled)');
+        }
+      } catch (error) {
+        console.warn('⚠️  Failed to generate RTC token:', error.message);
+        console.warn('⚠️  Using null token (works if token authentication is disabled in Agora console)');
+      }
 
-      // Step 5: Create and publish local audio track
+      // Step 5: Join the channel with token
+      await client.join(finalAppId, channelName, rtcToken, resultUserId || userId);
+
+      // Step 6: Create and publish local audio track
       const localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
       localAudioTrackRef.current = localAudioTrack;
       await client.publish(localAudioTrack);

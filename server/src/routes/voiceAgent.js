@@ -4,6 +4,7 @@ import {
   stopVoiceAgent,
   getAgentStatus,
   listAgents,
+  generateUserToken,
 } from '../controllers/voiceAgentController.js';
 
 const router = express.Router();
@@ -19,6 +20,9 @@ router.get('/status', getAgentStatus);
 
 // List all agents
 router.get('/list', listAgents);
+
+// Generate RTC token for user
+router.post('/token', generateUserToken);
 
 export default router;
 

@@ -3,6 +3,42 @@ import agoraConversationalAI from '../services/agoraConversationalAI.js';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
+ * Generate RTC token for user to join channel
+ */
+export const generateUserToken = async (req, res) => {
+  try {
+    const { channelName, userId } = req.body;
+
+    if (!channelName) {
+      return res.status(400).json({
+        success: false,
+        message: 'channelName is required',
+      });
+    }
+
+    const uid = userId ? Number(userId) : 0;
+    const expireTime = req.body.expireTime || 3600; // Default 1 hour
+
+    const token = agoraConversationalAI.generateRTCToken(channelName, uid, expireTime);
+
+    res.status(200).json({
+      success: true,
+      token,
+      channelName,
+      userId: uid,
+      expireTime,
+    });
+  } catch (error) {
+    console.error('Error generating user token:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate RTC token',
+      error: error.message,
+    });
+  }
+};
+
+/**
  * Start a voice agent for a ticket
  */
 export const startVoiceAgent = async (req, res) => {

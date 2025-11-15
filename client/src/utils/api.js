@@ -62,3 +62,12 @@ export const listVoiceAgents = async () => {
   return response.data;
 };
 
+export const generateUserToken = async (channelName, userId = null, expireTime = 3600) => {
+  const response = await api.post('/voice-agent/token', {
+    channelName,
+    userId,
+    expireTime,
+  });
+  return response.data;
+};
+
