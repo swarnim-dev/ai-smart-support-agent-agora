@@ -21,6 +21,16 @@ export const sendMessage = async (req, res) => {
       });
     }
     
+    const existingMessages = await Message.find({ ticketId })
+      .sort({ createdAt: 1 })
+      .select('text sender')
+      .limit(20);
+    
+    const conversationHistory = existingMessages.map((msg) => ({
+      text: msg.text,
+      sender: msg.sender,
+    }));
+    
     const userMessage = new Message({
       ticketId,
       text,
@@ -28,7 +38,7 @@ export const sendMessage = async (req, res) => {
     });
     await userMessage.save();
     
-    const aiResponse = await processMessage(text);
+    const aiResponse = await processMessage(text, conversationHistory);
     
     const agentMessage = new Message({
       ticketId,
@@ -36,6 +46,9 @@ export const sendMessage = async (req, res) => {
       sender: 'agent',
       intent: aiResponse.intent,
       confidence: aiResponse.confidence,
+      metadata: {
+        source: aiResponse.source || 'knowledge-base',
+      },
     });
     await agentMessage.save();
     
@@ -47,6 +60,7 @@ export const sendMessage = async (req, res) => {
         sender: agentMessage.sender,
         timestamp: agentMessage.createdAt,
         intent: agentMessage.intent,
+        source: aiResponse.source,
       },
     });
   } catch (error) {
@@ -73,7 +87,7 @@ export const getMessages = async (req, res) => {
     
     const messages = await Message.find({ ticketId })
       .sort({ createdAt: 1 })
-      .select('_id text sender createdAt intent');
+      .select('_id text sender createdAt intent metadata');
     
     res.status(200).json({
       success: true,
@@ -83,6 +97,7 @@ export const getMessages = async (req, res) => {
         sender: msg.sender,
         timestamp: msg.createdAt,
         intent: msg.intent,
+        source: msg.metadata?.source || 'knowledge-base',
       })),
     });
   } catch (error) {

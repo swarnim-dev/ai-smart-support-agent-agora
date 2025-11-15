@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ChatWindow from '../components/ChatWindow';
 import MessageInput from '../components/MessageInput';
+import VoiceAgent from '../components/VoiceAgent';
 import { startSession, sendMessage, getMessages, checkHealth } from '../utils/api';
 
 const Support = () => {
@@ -65,7 +66,7 @@ const Support = () => {
     };
 
     fetchMessages();
-    intervalRef.current = setInterval(fetchMessages, 2000);
+    intervalRef.current = setInterval(fetchMessages, 5000);
 
     return () => {
       if (intervalRef.current) {
@@ -153,26 +154,31 @@ const Support = () => {
             <div className={`hidden md:flex items-center gap-2 text-sm transition-colors ${
               isOnline ? 'text-green-200' : 'text-red-200'
             }`}>
-              {isOnline ? (
-                <>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span>Online</span>
-                </>
-              ) : (
-                <>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span>Offline</span>
-                </>
-              )}
+                {isOnline ? (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Online</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Offline</span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
       <ChatWindow messages={messages} ticketId={ticketId} sending={sending} isOnline={isOnline} />
+      <div className="bg-white border-t border-gray-200">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <VoiceAgent ticketId={ticketId} appId={import.meta.env.VITE_AGORA_APP_ID} />
+        </div>
+      </div>
       <MessageInput onSend={handleSend} disabled={sending || !ticketId || !isOnline} />
     </div>
   );

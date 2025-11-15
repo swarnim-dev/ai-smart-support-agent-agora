@@ -65,13 +65,20 @@ const ChatWindow = ({ messages, ticketId, sending }) => {
                     </div>
                   )}
                   <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
-                  <p
-                    className={`text-xs mt-2 ${
-                      msg.sender === 'user' ? 'text-blue-100' : 'text-gray-400'
-                    }`}
-                  >
-                    {formatTime(msg.timestamp || msg.createdAt)}
-                  </p>
+                  <div className="flex items-center justify-between mt-2">
+                    <p
+                      className={`text-xs ${
+                        msg.sender === 'user' ? 'text-blue-100' : 'text-gray-400'
+                      }`}
+                    >
+                      {formatTime(msg.timestamp || msg.createdAt)}
+                    </p>
+                    {msg.sender === 'agent' && msg.source && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                        📚 Knowledge Base
+                      </span>
+                    )}
+                  </div>
                 </div>
                 {msg.sender === 'user' && (
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white text-xs font-bold shadow-md">

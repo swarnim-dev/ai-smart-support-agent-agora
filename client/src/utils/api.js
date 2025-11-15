@@ -37,3 +37,28 @@ export const getMessages = async (ticketId) => {
   return response.data;
 };
 
+// Voice Agent API functions
+export const startVoiceAgent = async (ticketId, userId = null, config = {}) => {
+  const response = await api.post('/voice-agent/start', {
+    ticketId,
+    userId,
+    ...config,
+  });
+  return response.data;
+};
+
+export const stopVoiceAgent = async (ticketId) => {
+  const response = await api.post('/voice-agent/stop', { ticketId });
+  return response.data;
+};
+
+export const getVoiceAgentStatus = async (ticketId) => {
+  const response = await api.get(`/voice-agent/status?ticketId=${ticketId}`);
+  return response.data;
+};
+
+export const listVoiceAgents = async () => {
+  const response = await api.get('/voice-agent/list');
+  return response.data;
+};
+

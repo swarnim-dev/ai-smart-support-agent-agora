@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { connectDB } from './config/db.js';
 import sessionRoutes from './routes/session.js';
 import messageRoutes from './routes/messages.js';
+import voiceAgentRoutes from './routes/voiceAgent.js';
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.use((req, res, next) => {
 
 app.use('/api/session', sessionRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/voice-agent', voiceAgentRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
