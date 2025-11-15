@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import AgentBadge from './AgentBadge';
 
-const ChatWindow = ({ messages, ticketId, sending }) => {
+const ChatWindow = ({ messages, ticketId, sending, showInfoPanel }) => {
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
 
@@ -25,7 +25,7 @@ const ChatWindow = ({ messages, ticketId, sending }) => {
   };
 
   return (
-    <div ref={chatContainerRef} className="flex-1 overflow-y-auto px-4 py-6">
+    <div ref={chatContainerRef} className="flex-1 overflow-y-auto px-4 py-6 bg-gradient-to-b from-transparent to-gray-50">
       <div className="max-w-4xl mx-auto space-y-4">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full mt-20">
